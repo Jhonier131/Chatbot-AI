@@ -2,10 +2,9 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import OpenAI from 'openai';
 import * as fs from 'fs';
 import csv = require('csv-parser');
-import {
-  ChatCompletionMessageParam,
-  ChatCompletionTool,
-} from 'openai/resources/chat/completions';
+import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
+import { CHAT_CONFIG } from './chat.config';
+import { buildInitialMessages, CHAT_TOOLS } from './chat.prompts';
 
 /**
  * Service responsible for interacting with the OpenAI API.
@@ -27,89 +26,17 @@ export class ChatService {
    */
   async processEnquiry(userPrompt: string): Promise<string> {
     try {
-      const messages: ChatCompletionMessageParam[] = [
-        {
-          role: 'system',
-          content:
-            'You are a helpful product recommendation assistant for an online store. The store sells: electronics (phones, laptops, headphones, TVs, game consoles, smartwatches), clothing (shirts, shorts, dresses, boots, bags), and home goods (furniture, kitchen appliances, cleaning products, pools).\n' +
-            'IMPORTANT RULES:\n' +
-            '1. SMART SEARCHING & VAGUE REQUESTS: Whether the user makes a specific request (e.g., "gaming chair") or a vague/indirect one (e.g., "a gift for my dad", "something for the kitchen"), you MUST extract or infer a short, single-word or two-word English product keyword (e.g., "watch", "blender", "headphones") to call the searchProducts tool. Never use long phrases or conversational sentences as search queries.\n' +
-            '2. FALLBACK STRATEGY (MAX 5 ATTEMPTS): If searchProducts returns empty results, you MUST NOT immediately tell the user you couldn\'t find anything. Instead, automatically call searchProducts again using a broader related category or synonym (e.g., if "gaming chair" fails, try "chair", then try "furniture"). Limit yourself to a MAXIMUM of 5 total search attempts per user request to avoid delays. If you find results on a retry, you MUST present them clearly by acknowledging the change: "We don\'t have [original request], but here are some related options from our catalog:"\n' +
-            '3. When you receive product results from the searchProducts tool, you MUST present ALL products returned. For EACH product, always display:\n' +
-            '   - Product image using markdown syntax: ![Product Name](image_url)\n' +
-            '   - Product name\n' +
-            '   - Price (original and converted if applicable)\n' +
-            '   - Link to the product page\n' +
-            '   - Any available options (size, color, capacity, etc.)\n' +
-            '4. If the user asks for prices in a specific currency (e.g. pesos colombianos, euros, etc.) AND you find products, you MUST call convertCurrencies for EVERY product price found. Do NOT ask the user which product they prefer before converting. Convert ALL prices and then present the complete results.\n' +
-            '5. Always extract the numeric price from the product data (e.g. "900.0 USD" → amount=900, fromCurrency="USD") before calling convertCurrencies.\n' +
-            '6. Never ask the user to choose a product before fulfilling the currency conversion if the original request included a currency preference.\n' +
-            '7. ALWAYS include the product image in your response using markdown image syntax. Never skip the image.\n' +
-            '8. Use simple, single-word or two-word English product queries for searchProducts (e.g. "watch", "polo shirt", "headphones"). Avoid phrases like "gift for father".',
-        },
-        {
-          role: 'user',
-          content: userPrompt,
-        },
-      ];
+      const messages: ChatCompletionMessageParam[] =
+        buildInitialMessages(userPrompt);
 
-      const tools: ChatCompletionTool[] = [
-        {
-          type: 'function',
-          function: {
-            name: 'searchProducts',
-            description:
-              'Search for products in the store catalog using a simple product keyword. Use short, specific English product names (e.g. "watch", "laptop", "headphones", "shirt", "boots"). If the first search returns no results, retry with a different related keyword before giving up.',
-            parameters: {
-              type: 'object',
-              properties: {
-                query: {
-                  type: 'string',
-                  description:
-                    'A short, specific product keyword in English to search in the catalog (e.g. "watch", "iphone", "laptop", "polo shirt"). Do not use full sentences or gift-related phrases.',
-                },
-              },
-              required: ['query'],
-            },
-          },
-        },
-        {
-          type: 'function',
-          function: {
-            name: 'convertCurrencies',
-            description: 'Convert an amount from one currency to another.',
-            parameters: {
-              type: 'object',
-              properties: {
-                amount: {
-                  type: 'number',
-                  description: 'The amount to convert.',
-                },
-                fromCurrency: {
-                  type: 'string',
-                  description:
-                    'The currency code to convert from (e.g., USD, EUR).',
-                },
-                toCurrency: {
-                  type: 'string',
-                  description:
-                    'The currency code to convert to (e.g., USD, EUR).',
-                },
-              },
-              required: ['amount', 'fromCurrency', 'toCurrency'],
-            },
-          },
-        },
-      ];
-
-      let maxIterations = 6;
+      let maxIterations = CHAT_CONFIG.MAX_TOOL_ITERATIONS;
       while (maxIterations > 0) {
         maxIterations--;
 
         const response = await this.openai.chat.completions.create({
-          model: 'gpt-3.5-turbo',
+          model: CHAT_CONFIG.OPENAI_MODEL,
           messages: messages,
-          tools: tools,
+          tools: CHAT_TOOLS,
           tool_choice: 'auto',
         });
 
@@ -125,11 +52,15 @@ export class ChatService {
             let functionResult = '';
 
             if (functionName === 'searchProducts') {
-              console.log(`[ChatService] Executing tool: searchProducts with query="${functionArgs.query}"`);
+              console.log(
+                `[ChatService] Executing tool: searchProducts with query="${functionArgs.query}"`,
+              );
               const products = await this.searchProducts(functionArgs.query);
               functionResult = JSON.stringify(products);
             } else if (functionName === 'convertCurrencies') {
-              console.log(`[ChatService] Executing tool: convertCurrencies with amount=${functionArgs.amount}, from=${functionArgs.fromCurrency}, to=${functionArgs.toCurrency}`);
+              console.log(
+                `[ChatService] Executing tool: convertCurrencies with amount=${functionArgs.amount}, from=${functionArgs.fromCurrency}, to=${functionArgs.toCurrency}`,
+              );
               const conversion = await this.convertCurrencies(
                 functionArgs.amount,
                 functionArgs.fromCurrency,
@@ -169,7 +100,9 @@ export class ChatService {
       const results: any[] = [];
       const lowerCaseQuery = query.toLowerCase();
 
-      const stream = fs.createReadStream('products_list.csv').pipe(csv());
+      const stream = fs
+        .createReadStream(CHAT_CONFIG.PRODUCTS_CSV_PATH)
+        .pipe(csv());
 
       stream
         .on('data', (data) => {
@@ -181,14 +114,14 @@ export class ChatService {
 
           if (isMatch) {
             results.push(data);
-            if (results.length === 2) {
+            if (results.length === CHAT_CONFIG.MAX_PRODUCTS_PER_SEARCH) {
               stream.destroy();
               resolve(results);
             }
           }
         })
         .on('end', () => {
-          if (results.length < 2) {
+          if (results.length < CHAT_CONFIG.MAX_PRODUCTS_PER_SEARCH) {
             resolve(results);
           }
         })
@@ -208,9 +141,8 @@ export class ChatService {
   ): Promise<any> {
     try {
       const appId = process.env.OPEN_EXCHANGE_APP_ID;
-      const response = await fetch(
-        `https://openexchangerates.org/api/latest.json?app_id=${appId}`,
-      );
+      const url = `${CHAT_CONFIG.OPEN_EXCHANGE_BASE_URL}/latest.json?app_id=${appId}`;
+      const response = await fetch(url);
 
       if (!response.ok) {
         throw new Error('Failed to fetch from Open Exchange Rates API');
