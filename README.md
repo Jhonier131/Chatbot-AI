@@ -3,7 +3,7 @@
 An AI-powered e-commerce chatbot utilizing OpenAI Function Calling to search products from a CSV catalog and perform real-time currency conversions.
 
 ### 🌐 Live Demo
-The application is running and accessible at: **[http://16.59.127.29:3010](http://16.59.127.29:3010)**
+The application is running and accessible at: **[https://16.59.127.29](https://16.59.127.29)**
 
 ### 🚀 CI/CD & Deployment
 This repository is configured with **Automated Deployment (CI/CD)**:
