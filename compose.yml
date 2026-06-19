@@ -15,6 +15,9 @@ services:
     build:
       context: ./wizybot-frontend
     ports:
-      - "3010:80" # Puerto HTTP estándar
+      - "80:80" # Escucha tráfico HTTP estándar
+      - "443:443" # Escucha tráfico HTTPS seguro
+    volumes:
+      - ./certs:/etc/nginx/ssl:ro # Inyecta los certificados que creaste en el EC2
     depends_on:
       - backend
