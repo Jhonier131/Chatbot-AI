@@ -2,6 +2,15 @@
 
 An AI-powered e-commerce chatbot utilizing OpenAI Function Calling to search products from a CSV catalog and perform real-time currency conversions.
 
+### 🌐 Live Demo
+The application is running and accessible at: **[http://16.59.127.29:3010](http://16.59.127.29:3010)**
+
+### 🚀 CI/CD & Deployment
+This repository is configured with **Automated Deployment (CI/CD)**:
+* **CI/CD Pipeline**: Configured with GitHub Actions (located in [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)).
+* **Hosting**: Deployed automatically to an **AWS EC2 Instance** upon pushing to the `main` branch.
+* **Orchestration**: Managed via **Docker & Docker Compose** for zero-downtime, containerized execution.
+
 ---
 
 ## 📁 Project Structure
