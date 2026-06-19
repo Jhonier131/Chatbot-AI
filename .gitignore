@@ -1,0 +1,69 @@
+# =====================================================================
+# VARIABLES DE ENTORNO Y SEGURIDAD (CRÍTICO)
+# =====================================================================
+.env
+.env.local
+!wizybot-frontend/.env.production
+.env.development
+.env.*.local
+*.env
+
+# =====================================================================
+# DEPENDENCIAS
+# =====================================================================
+node_modules/
+/wizybot-api/node_modules/
+/wizybot-frontend/node_modules/
+.npm
+/jspm_packages/
+
+# =====================================================================
+# ARCHIVOS DE COMPILACIÓN
+# =====================================================================
+dist/
+/wizybot-api/dist/
+build/
+/wizybot-frontend/dist/
+/wizybot-frontend/build/
+.next/
+out/
+
+# =====================================================================
+# LOGS Y CACHÉ
+# =====================================================================
+*.log
+logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.eslintcache
+.stylelintcache
+
+# =====================================================================
+# CONFIGURACIONES DE EDITORES E IDEs
+# =====================================================================
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.classpath
+.project
+.settings/
+
+# =====================================================================
+# ARCHIVOS DEL SISTEMA OPERATIVO
+# =====================================================================
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+
+# =====================================================================
+# DOCKER
+# =====================================================================
+.docker-data/
