@@ -8,15 +8,19 @@ import { ChatMessage } from "./ChatMessage";
  */
 export const Chat = () => {
   const { messages, isLoading, sendMessage } = useChat();
-  const messagesEndRef = useRef(null);
+  const chatMessagesRef = useRef(null);
 
   // Auto-scroll to the bottom when new messages arrive
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatMessagesRef.current) {
+      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
+    }
   };
 
   useEffect(() => {
     scrollToBottom();
+    const timer = setTimeout(scrollToBottom, 100);
+    return () => clearTimeout(timer);
   }, [messages, isLoading]);
 
   return (
@@ -26,7 +30,7 @@ export const Chat = () => {
         <h1>Assistant</h1>
       </header>
 
-      <div className="chat-messages">
+      <div className="chat-messages" ref={chatMessagesRef} onLoadCapture={scrollToBottom}>
         {messages.length === 0 ? (
           <div className="chat-empty-state">
             <p>Hello! How can I help you today?</p>
@@ -42,7 +46,6 @@ export const Chat = () => {
             <div className="typing-dot"></div>
           </div>
         )}
-        <div ref={messagesEndRef} />
       </div>
 
       <div className="chat-input-container">
