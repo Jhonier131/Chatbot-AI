@@ -1,200 +1,190 @@
 # 🤖 Chatbot-AI
 
-Un chatbot de e-commerce impulsado por IA que utiliza OpenAI Function Calling para buscar productos en un catálogo CSV y realizar conversiones de divisas en tiempo real.
+An AI-powered e-commerce chatbot utilizing OpenAI Function Calling to search products from a CSV catalog and perform real-time currency conversions.
 
 ---
 
-## 📁 Estructura del Proyecto
+## 📁 Project Structure
 
 ```
 Chatbot-AI/
 ├── wizybot-api/          # Backend — NestJS + OpenAI
 ├── wizybot-frontend/     # Frontend — React + Vite
-├── compose.yml           # Docker Compose (despliegue completo)
-└── .env.ejemplo          # Variables de entorno de referencia
+├── compose.yml           # Docker Compose (full deployment)
+└── .env.ejemplo          # Reference environment variables
 ```
 
 ---
 
-## ⚙️ Variables de Entorno
+## ⚙️ Environment Variables
 
-Antes de iniciar cualquier servicio, configura las variables de entorno necesarias.
+Before starting any service, configure the required environment variables.
 
 ### Backend (`wizybot-api/.env`)
 
-Crea el archivo `wizybot-api/.env` basándote en `.env.ejemplo`:
+Create the `wizybot-api/.env` file based on `.env.ejemplo`:
 
 ```env
 OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 OPEN_EXCHANGE_APP_ID=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-| Variable               | Descripción                                                                 | Obligatoria |
-|------------------------|-----------------------------------------------------------------------------|:-----------:|
-| `OPENAI_API_KEY`       | API Key de OpenAI ([obtener aquí](https://platform.openai.com/api-keys))    | ✅           |
-| `OPEN_EXCHANGE_APP_ID` | App ID de Open Exchange Rates ([obtener aquí](https://openexchangerates.org/account/app-ids)) | ✅ |
+| Variable               | Description                                                                 | Required |
+|------------------------|-----------------------------------------------------------------------------|:--------:|
+| `OPENAI_API_KEY`       | OpenAI API Key ([get here](https://platform.openai.com/api-keys))           |    ✅    |
+| `OPEN_EXCHANGE_APP_ID` | Open Exchange Rates App ID ([get here](https://openexchangerates.org/account/app-ids)) |    ✅    |
 
 ### Frontend (`wizybot-frontend/.env.local`)
 
-Crea el archivo `wizybot-frontend/.env.local` para desarrollo local:
+Create the `wizybot-frontend/.env.local` file for local development:
 
 ```env
 VITE_API_URL=http://localhost:3100
 ```
 
-| Variable        | Descripción                                      | Por defecto              |
+| Variable        | Description                                      | Default                  |
 |-----------------|--------------------------------------------------|--------------------------|
-| `VITE_API_URL`  | URL base del backend (sin barra al final)        | `http://localhost:3100`  |
+| `VITE_API_URL`  | Backend base URL (no trailing slash)             | `http://localhost:3100`  |
 
-> **Nota:** Para producción, usa `wizybot-frontend/.env.production` con la URL del servidor real.
+> **Note:** For production, use `wizybot-frontend/.env.production` with the real server URL.
 
 ---
 
-## 🚀 Inicio Rápido — Desarrollo Local
+## 🚀 Quick Start — Local Development
 
-### Requisitos Previos
+### Prerequisites
 
-- [Node.js](https://nodejs.org/) v20 o superior
-- npm v10 o superior
-- Claves de API configuradas (ver sección anterior)
+- [Node.js](https://nodejs.org/) v20 or higher
+- npm v10 or higher
+- Configured API keys (see previous section)
 
-### 1. Clonar el repositorio
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/Jhonier131/Chatbot-AI.git
 cd Chatbot-AI
 ```
 
-### 2. Configurar el Backend
+### 2. Set Up the Backend
 
 ```bash
 cd wizybot-api
 
-# Instalar dependencias
+# Install dependencies
 npm install
 
-# Crear archivo de entorno
+# Create environment file
 cp ../.env.ejemplo .env
-# ✏️ Edita .env y coloca tus claves reales
+# ✏️ Edit .env and enter your real keys
 
-# Iniciar en modo desarrollo (con hot-reload)
+# Start in development mode (with hot-reload)
 npm run start:dev
 ```
 
-El backend estará disponible en: **http://localhost:3100**  
-Documentación Swagger: **http://localhost:3100/api**
+The backend will be available at: **http://localhost:3100**  
+Swagger Documentation: **http://localhost:3100/api**
 
-### 3. Configurar el Frontend
+### 3. Set Up the Frontend
 
-Abre una nueva terminal:
+Open a new terminal:
 
 ```bash
 cd wizybot-frontend
 
-# Instalar dependencias
+# Install dependencies
 npm install
 
-# Crear archivo de entorno local
+# Create local environment file
 echo "VITE_API_URL=http://localhost:3100" > .env.local
 
-# Iniciar en modo desarrollo
+# Start in development mode
 npm run dev
 ```
 
-El frontend estará disponible en: **http://localhost:5173**
+The frontend will be available at: **http://localhost:5173**
 
 ---
 
-## 🐳 Despliegue con Docker
+## 🐳 Docker Deployment
 
-### Requisitos
+### Prerequisites
 
-- [Docker](https://docs.docker.com/get-docker/) y [Docker Compose](https://docs.docker.com/compose/install/)
-- Archivo `.env` en la raíz del proyecto con las variables del backend
+- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
+- A `.env` file in the root directory with backend variables
 
-### Pasos
+### Steps
 
 ```bash
-# 1. Crea el archivo de entorno en la raíz
+# 1. Create the environment file in the root
 cp .env.ejemplo .env
-# ✏️ Edita .env con tus claves reales
+# ✏️ Edit .env with your real keys
 
-# 2. Construir y levantar todos los servicios
+# 2. Build and start all services
 docker compose up --build
 
-# Para ejecutar en segundo plano
+# To run in the background
 docker compose up --build -d
 ```
 
-| Servicio   | Puerto local | URL                   |
-|------------|:------------:|-----------------------|
-| Backend    | 3100         | http://localhost:3100 |
-| Frontend   | 3010         | http://localhost:3010 |
+| Service    | Local Port | URL                   |
+|------------|:----------:|-----------------------|
+| Backend    | 3100       | http://localhost:3100 |
+| Frontend   | 3010       | http://localhost:3010 |
 
-### Comandos útiles de Docker
+### Useful Docker Commands
 
 ```bash
-# Ver logs en tiempo real
+# View real-time logs
 docker compose logs -f
 
-# Detener los servicios
+# Stop services
 docker compose down
 
-# Reconstruir solo el backend
+# Rebuild only the backend
 docker compose up --build backend
 ```
 
 ---
 
-## 📜 Scripts Disponibles
+## 📜 Available Scripts
 
 ### Backend (`wizybot-api/`)
 
-| Comando               | Descripción                              |
-|-----------------------|------------------------------------------|
-| `npm run start`       | Inicia la app en modo producción         |
-| `npm run start:dev`   | Inicia con hot-reload (desarrollo)       |
-| `npm run start:debug` | Inicia en modo debug con hot-reload      |
-| `npm run build`       | Compila TypeScript a JavaScript (`dist/`)|
-| `npm run test`        | Ejecuta las pruebas unitarias            |
-| `npm run test:e2e`    | Ejecuta las pruebas end-to-end           |
+| Command               | Description                                |
+|-----------------------|--------------------------------------------|
+| `npm run start`       | Starts the app in production mode          |
+| `npm run start:dev`   | Starts with hot-reload (development)       |
+| `npm run start:debug` | Starts in debug mode with hot-reload       |
+| `npm run build`       | Compiles TypeScript to JavaScript (`dist/`)|
+| `npm run test`        | Runs unit tests                            |
+| `npm run test:e2e`    | Runs end-to-end tests                      |
 
 ### Frontend (`wizybot-frontend/`)
 
-| Comando          | Descripción                                    |
+| Command          | Description                                    |
 |------------------|------------------------------------------------|
-| `npm run dev`    | Inicia el servidor de desarrollo con HMR       |
-| `npm run build`  | Genera el bundle de producción en `dist/`      |
+| `npm run dev`    | Starts the development server with HMR         |
+| `npm run build`  | Generates the production bundle in `dist/`      |
 
 ---
 
-## 🛠️ Stack Tecnológico
+## 🛠️ Tech Stack
 
 ### Backend
-- **[NestJS](https://nestjs.com/)** — Framework Node.js escalable y modular
-- **[OpenAI SDK](https://github.com/openai/openai-node)** — Function Calling para herramientas de IA
-- **[Swagger / OpenAPI](https://swagger.io/)** — Documentación automática de la API
-- **[csv-parser](https://www.npmjs.com/package/csv-parser)** — Lectura del catálogo de productos
-- **TypeScript** — Tipado estático
+- **[NestJS](https://nestjs.com/)** — Scalable and modular Node.js framework
+- **[OpenAI SDK](https://github.com/openai/openai-node)** — Function Calling for AI tools
+- **[Swagger / OpenAPI](https://swagger.io/)** — Automatic API documentation
+- **[csv-parser](https://www.npmjs.com/package/csv-parser)** — Product catalog parser
+- **TypeScript** — Static typing
 
 ### Frontend
-- **[React 19](https://react.dev/)** — Interfaz de usuario
-- **[Vite](https://vitejs.dev/)** — Bundler y servidor de desarrollo ultrarrápido
-- **[react-markdown](https://github.com/remarkjs/react-markdown)** — Renderizado de respuestas en Markdown
-- **[Lucide React](https://lucide.dev/)** — Iconografía
+- **[React 19](https://react.dev/)** — User interface
+- **[Vite](https://vitejs.dev/)** — Fast build tool and dev server
+- **[react-markdown](https://github.com/remarkjs/react-markdown)** — Markdown rendering for responses
+- **[Lucide React](https://lucide.dev/)** — Iconography
 
 ---
 
-## 🤝 Contribuir
+## 📄 License
 
-1. Haz un fork del repositorio
-2. Crea tu rama de feature: `git checkout -b feature/nueva-funcionalidad`
-3. Realiza tus cambios y haz commit: `git commit -m 'feat: agregar nueva funcionalidad'`
-4. Sube tu rama: `git push origin feature/nueva-funcionalidad`
-5. Abre un Pull Request
-
----
-
-## 📄 Licencia
-
-Este proyecto es de uso privado.
+This project is for private use only.
