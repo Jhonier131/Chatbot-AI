@@ -3,7 +3,7 @@ import OpenAI from 'openai';
 import * as fs from 'fs';
 import csv = require('csv-parser');
 import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
-import { CHAT_CONFIG } from './chat.config';
+import { CHAT_CONFIG, SEARCH_EXCLUDED_COLUMNS } from './chat.config';
 import { buildInitialMessages, CHAT_TOOLS } from './chat.prompts';
 
 /**
@@ -98,19 +98,35 @@ export class ChatService {
   private async searchProducts(query: string): Promise<any[]> {
     return new Promise((resolve, reject) => {
       const results: any[] = [];
-      const lowerCaseQuery = query.toLowerCase();
+
+      // Escape special regex characters in the user query to prevent runtime errors.
+      // The 'i' flag makes the match case-insensitive, replacing the per-value
+      // .toLowerCase() call that was previously executed for every column in every row.
+      const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const queryRegex = new RegExp(escapedQuery, 'i');
 
       const stream = fs
         .createReadStream(CHAT_CONFIG.PRODUCTS_CSV_PATH)
         .pipe(csv());
 
       stream
-        .on('data', (data) => {
-          const isMatch = Object.values(data).some(
-            (value) =>
-              typeof value === 'string' &&
-              value.toLowerCase().includes(lowerCaseQuery),
-          );
+        .on('data', (data: Record<string, unknown>) => {
+          // Use for...in with a break instead of Object.values().some() to avoid
+          // allocating an intermediate array of values on every row.
+          // SEARCH_EXCLUDED_COLUMNS.has() is O(1) — skips non-searchable columns
+          // such as embeddingText, url, price, variants, etc.
+          let isMatch = false;
+          for (const key in data) {
+            if (
+              Object.prototype.hasOwnProperty.call(data, key) &&
+              !SEARCH_EXCLUDED_COLUMNS.has(key) &&
+              typeof data[key] === 'string' &&
+              queryRegex.test(data[key] as string)
+            ) {
+              isMatch = true;
+              break;
+            }
+          }
 
           if (isMatch) {
             results.push(data);

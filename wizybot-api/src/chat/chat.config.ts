@@ -18,3 +18,21 @@ export const CHAT_CONFIG = {
   /** Local CSV file path relative to project root */
   PRODUCTS_CSV_PATH: 'products_list.csv',
 } as const;
+
+/**
+ * Set of CSV column names that should be excluded from the full-text search.
+ * Using a Set provides O(1) lookups instead of O(n) array scans on every
+ * column of every row, keeping the hot path as lean as possible.
+ *
+ * Excluded because they are either internal/embedding data, URLs, or
+ * numeric/structured fields that are not meaningful for keyword search.
+ */
+export const SEARCH_EXCLUDED_COLUMNS = new Set([
+  'url',
+  'imageUrl',
+  'discount',
+  'price',
+  'variants',
+  'createDate',
+]);
+
